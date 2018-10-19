@@ -16,7 +16,7 @@ defmodule CHORD do
   end
 
   def handle_call({:fingerTable, val}, _from, state) do
-    [hash,_] = Enum.at(state,1)
+    [hash, _] = state
     state = [hash,val]
     {:reply, state,state}
   end
@@ -24,7 +24,6 @@ defmodule CHORD do
   def handle_call({:update,hashKey},_from,state) do
     [hashName,key] = state
     state = [hashName,key | hashKey]
-    IO.inspect state
     {:reply, state,state}
   end
 
@@ -68,28 +67,35 @@ defmodule CHORD do
       end
   end
 
-  def getSuccessorNode(key,nodeList) do
+  def randomString(length) do
+    charList = Enum.map(1..length, fn x ->
+      Enum.random(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'])
+    end)
+    List.to_string(charList)
+  end
+
+  def stringGenerator(numNodes) do
+    #nodeList = :ets.insert(:table, {nodeName, hashName})
+    keyList = Enum.map(1..5*numNodes, fn x ->
+      value = randomString(12)
+      key = :crypto.hash(:sha, value)
+      node = getSuccessorNode(key)
+      storeKeyinNode(key, node)
+      key
+    end)
+    :ets.insert(:table, {"keys", keyList}) # if new table needed??????
+  end
+
+  def getSuccessorNode(key) do
     node =  Enum.find(nodeList, fn x -> :crypto.hash(:sha, x) > key end)
     if(node == nil) do
       Enum.at(nodeList,0)
     else
      node
     end
-   end
+  end
 
-   def randomString(length) do
-     if(length != 0) do
-       Enum.random(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'])
-     end
-   end
+  def storeKeyinNode(key, node) do
 
-   def stringGenerator(numRequests,nodeList) do
-    Enum.map(1..2*numRequests, fn x->
-      value = randomString(12)
-      key = :crypto.hash(:sha, value)
-      node = getSuccessorNode(key,nodeList)
-      #storeKeyinNode(node,key)
-      #@valueList = [@valueList | value]
-    end)
   end
 end
