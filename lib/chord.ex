@@ -92,6 +92,7 @@ defmodule CHORD do
       node = String.to_atom("h_" <> value)
       GenServer.call(node, {:fingerTable, map})
     else
+      IOString.to_integer(nodeId)
       start = String.to_integer(nodeId) + round(:math.pow(2,i))
       index = rem(start, max)
       successor =
