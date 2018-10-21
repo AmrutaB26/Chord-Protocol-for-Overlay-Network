@@ -1,7 +1,8 @@
-defmodule SSUPERVISOR do
+defmodule CHORDSUPERVISOR do
   use Supervisor
 
   def start_link(numNodes) do
+    :ets.insert(:table, {"m", :math.log2(numNodes) |> Float.floor |> round})
     Supervisor.start_link(__MODULE__,[numNodes],name: __MODULE__)
   end
 
@@ -13,4 +14,5 @@ defmodule SSUPERVISOR do
     end)
     Supervisor.init(children,strategy: :one_for_one)
   end
+
 end

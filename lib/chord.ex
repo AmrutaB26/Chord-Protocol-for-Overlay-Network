@@ -4,10 +4,12 @@ defmodule CHORD do
   ## ------------------------ Callback functions ----------------------- ##
 
   def start_link(num) do
-    nodeName = "Node_" <> Integer.to_string(num)
-    hashName = :crypto.hash(:sha, "Node_" <> Integer.to_string(num)) |> Base.encode16
-    :ets.insert(:table, {nodeName, hashName}) # -------------------------- try to change
-    GenServer.start_link(__MODULE__,[hashName,%{}], name: String.to_atom(nodeName))
+    nodeName =  "Node_" <> Integer.to_string(num)
+    [{_,m}] = :ets.lookup(:table,"m")
+    hashValue = :crypto.hash(:sha, "Node_" <> Integer.to_string(num)) |> Base.encode16
+    truncHashValue = truncateHash(hashValue,m)
+    :ets.insert(:table, {"Nodes", {hashValue, nodeName,truncHashValue}})
+    GenServer.start_link(__MODULE__,[hashValue,%{}], name: String.to_atom("h_" <> truncHashValue))
   end
 
   def init(state) do
@@ -30,72 +32,58 @@ defmodule CHORD do
   # ---------------------- Network Creation ------------------------ ##
 
   def createNetwork(numNodes) do
-    hashList = sortHash(numNodes)
-    m = :math.log2(numNodes) |> Float.floor |> round
-    createFingerTables(m, hashList)
+    list = :ets.lookup(:table,"Nodes")
+    finalList = Enum.sort_by(list,&elem(&1,1))
+    :ets.delete(:table, "Nodes")
+    :ets.insert(:table, {"Nodes", finalList})
+    createFingerTables(numNodes)
   end
 
-  def sortHash(numNodes) do
-    Enum.map(1..numNodes, fn x ->
-      [{_,list}] = :ets.lookup(:table,"Node_" <> Integer.to_string(x))
-      list
+  def truncateHash(hashValue,m) do
+    newHash = String.slice(hashValue,0..m-1)
+    {value,_} = Integer.parse(newHash,16)
+    Integer.to_string value
+  end
+
+  def createFingerTables(numNodes) do
+    nodes = :ets.lookup(:table,"Nodes")
+    IO.inspect nodes
+    [{_,hashList}] = nodes
+    nodeIds = Enum.map(hashList, fn x->
+      {_, {_,_,nodeId}} = x
+      String.to_integer nodeId
     end)
-    |> Enum.sort()
-  end
-
-  def createFingerTables(m, hashList) do
-    Enum.map(hashList, fn x->
-      index = Enum.find_index(hashList, fn y -> y == x end)
-      map = %{}
-      map = fingerTable(0, map, index, m, hashList)
-      GenServer.call(String.to_atom("Node_" <> Integer.to_string(index+1)), {:fingerTable, map})
+    max = Enum.max(nodeIds)
+    Enum.map(nodeIds, fn x->
+      map = fingerTable(0, %{}, numNodes, x,nodeIds, max)
+      IO.inspect map
+      #GenServer.call("h_" <> String.to_atom(x), {:fingerTable, map})
     end)
   end
 
-  def fingerTable(i, map, index, m, hashList) do
-      if(i == m+1) do
-        map
+  def fingerTable(i, map, numNodes, nodeId, list, max) do
+    [{_,m}] = :ets.lookup(:table,"m")
+    if(i == m) do
+       map
+    else
+      start = rem(nodeId + round(:math.pow(2,i)), max)
+      successor =
+      if(start > max) do
+        Enum.at(list, 0)
       else
-        start = rem(index + round(:math.pow(2,i)), round(:math.pow(2,m)))
-        successor = if(i < m) do
-          Enum.at(hashList, index+1)   ## ------------------- if to be stored based on index????
-        else
-          Enum.at(hashList, 0)
-        end
-        map = Map.put(map, start, successor)
-        fingerTable(i+1, map, index, m, hashList)
+        Enum.find(list, fn x ->
+          start <= x
+        end)
+      end
+      map = Map.put(map, start, successor)
+      fingerTable(i+1, map, numNodes, nodeId, list, max)
       end
   end
 
   def randomString(length) do
-    charList = Enum.map(1..length, fn x ->
+    charList = Enum.map(1..length,
       Enum.random(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'])
-    end)
+    )
     List.to_string(charList)
-  end
-
-  def stringGenerator(numNodes) do
-    #nodeList = :ets.insert(:table, {nodeName, hashName})
-    keyList = Enum.map(1..5*numNodes, fn x ->
-      value = randomString(12)
-      key = :crypto.hash(:sha, value)
-      node = getSuccessorNode(key)
-      storeKeyinNode(key, node)
-      key
-    end)
-    :ets.insert(:table, {"keys", keyList}) # if new table needed??????
-  end
-
-  def getSuccessorNode(key) do
-    node =  Enum.find(nodeList, fn x -> :crypto.hash(:sha, x) > key end)
-    if(node == nil) do
-      Enum.at(nodeList,0)
-    else
-     node
-    end
-  end
-
-  def storeKeyinNode(key, node) do
-
   end
 end
