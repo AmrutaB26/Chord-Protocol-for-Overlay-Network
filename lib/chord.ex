@@ -21,6 +21,13 @@ defmodule CHORD do
     {:reply,  state ,state}
   end
 
+  def handle_cast({:hopCount,hop},state) do
+    IO.inspect state
+    [_,_,h] = state
+    state = ["",%{},[hop + Enum.at(h,0)]]
+    {:noreply, state}
+  end
+
   def handle_call({:storeKey,hashKey},_from,state) do
     [hashName,fingerTable,list] = state
     state = [hashName,fingerTable, list ++ [hashKey]]
@@ -40,7 +47,7 @@ defmodule CHORD do
   # ---------------------- Network Creation ------------------------ ##
 
   def createNetwork(numNodes) do
-    IO.puts "Creating network"
+    #IO.puts "Creating network"
     list = :ets.lookup(:table,"Nodes")
     finalList = Enum.sort_by(list,&elem(&1,1))
     :ets.delete(:table, "Nodes")
@@ -76,25 +83,32 @@ defmodule CHORD do
 
     Enum.map(nodeIds,
     fn x->
-      fingerTable(0, %{}, numNodes, x,nodeIds, max)
+      fingerTable(0, %{}, numNodes, x,nodeIds, max,157)
     end)
   end
 
-  def fingerTable(i, map, numNodes, nodeId, list, max) do
-    [{_,m}] = :ets.lookup(:table,"m")
+  def makeSize(value) do
+    if(String.length(value) == 40) do
+      value
+    else
+      makeSize("0"<>value)
+    end
+  end
+
+  def fingerTable(i, map, numNodes, nodeId, list, max,m) do
+    [{_,n}] = :ets.lookup(:table,"m")
     if(i == m) do
       value = Integer.to_string(String.to_integer(nodeId), 16)
-      value = if(String.length(value) != 40) do
-        "0"<>value
-      else value
-      end
-      IO.inspect value
+      value = makeSize(value)
+      #IO.inspect value
       node = String.to_atom("h_" <> value)
       GenServer.call(node, {:fingerTable, map})
     else
-      IOString.to_integer(nodeId)
+      #IO.inspect String.to_integer(nodeId)
+      #IO.inspect round(:math.pow(2,i))
       start = String.to_integer(nodeId) + round(:math.pow(2,i))
-      index = rem(start, max)
+      #IO.inspect start String.to_integer(Enum.max(list))
+      index = rem(start, round(:math.pow(2,n)))
       successor =
         Enum.find(list, fn x ->
           index <= String.to_integer(x)
@@ -102,10 +116,13 @@ defmodule CHORD do
         finalSuccessor =
         if(successor == nil) do
            String.to_integer(Enum.at(list,0))
-          else String.to_integer(successor)
+          else
+            String.to_integer(successor)
         end
-      map = Map.put(map, Integer.to_string(start,16), Integer.to_string(finalSuccessor,16))
-      fingerTable(i+1, map, numNodes, nodeId, list, max)
+        value = Integer.to_string(finalSuccessor,16)
+        |> makeSize()
+      map = Map.put(map, Integer.to_string(start,16), value)
+      fingerTable(i+1, map, numNodes, nodeId, list, max,m)
       end
   end
 
