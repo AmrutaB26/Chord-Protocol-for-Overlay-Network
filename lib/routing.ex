@@ -12,7 +12,6 @@ def lookup(numRequests,numNodes) do
   #IO.puts("keys : #{inspect :ets.lookup(:table, "Keys")}")
   IO.puts("Looking for keys")
   [{_,keyList}] = :ets.lookup(:table, "Keys")
-  GenServer.start_link(CHORD,["",%{},[0]], name: String.to_atom("main"))
   hopsList = Enum.map(1..numRequests,fn x->
       key = :crypto.hash(:sha, Enum.random(keyList)) |> Base.encode16
       nodeList = getNodeList()
@@ -33,7 +32,7 @@ def hopsCount do
 end
 
 def find_successor(key,firstNode,hops) do
-  [_,fingerTable,_] = GenServer.call(String.to_atom("h_"<>firstNode),{:getState})
+  [_,fingerTable,_,_] = GenServer.call(String.to_atom("h_"<>firstNode),{:getState})
   {_,successor} = Enum.at(fingerTable,0)
 
   #key between first node and successor
