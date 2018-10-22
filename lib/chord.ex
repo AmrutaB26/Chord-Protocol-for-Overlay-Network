@@ -56,6 +56,7 @@ defmodule CHORD do
     :ets.delete(:table, "Nodes")
     :ets.insert(:table, {"Nodes", finalList})
     createFingerTables()
+    storePredecessor()
   end
 
   def checkStatus do
@@ -63,10 +64,21 @@ defmodule CHORD do
     [{_,hashList}] = nodes
     Enum.map(hashList, fn x->
       {_, {nodeId,_}} = x
-      IO.inspect GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
-      #[_,list,_,_] = GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
-      #sorted_map = Enum.to_list(list) |> Enum.sort(fn({key1, _}, {key2, _}) -> key1 < key2 end)
-      #IO.inspect sorted_map
+      GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
+      [a,list,b,c] = GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
+      sorted_map = Enum.to_list(list) |> Enum.sort(fn({key1, _}, {key2, _}) -> key1 < key2 end)
+      IO.inspect([a,sorted_map,b,c] , limit: :infinity)
+    end)
+  end
+
+  def storePredecessor() do
+    nodeList = ROUTING.getNodeList
+    numNodes = Enum.count(nodeList)
+    GenServer.cast(String.to_atom("h_" <> Enum.at(nodeList, 0)) ,{:pred,Enum.at(nodeList, numNodes-1)})
+    Enum.each(1..numNodes-1, fn x->
+      pred = Enum.at(nodeList, x-1)
+      nodeId = "h_" <> Enum.at(nodeList, x)
+      GenServer.cast(String.to_atom(nodeId) ,{:pred,pred})
     end)
   end
 

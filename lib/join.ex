@@ -1,5 +1,6 @@
 defmodule JOIN do
   def startJoin(numNodes) do
+    IO.puts "hereeee"
     [nodeIds,_] = CHORD.generateListNodeIds()
     l = length(nodeIds)
     Enum.map(1..numNodes, fn x->
@@ -14,11 +15,16 @@ defmodule JOIN do
       :ets.insert(:table, {"Nodes", finalList})
 
       #start genserver process
+      IO.puts "hereeee"
       GenServer.start_link(CHORD,[hashValue,%{},[],""], name: String.to_atom("h_" <> hashValue))
       randomNode = Enum.random(nodeIds) #-- decimal
+      node = Integer.to_string(String.to_integer(randomNode),16) |> CHORD.makeSize()
 
       #find successor
+      #[successor,_] = ROUTING.find_successor(hashValue, node,0)
       successor = CHORD.getSuccessorNode(hashValue)
+      IO.inspect successor
+      IO.inspect hashValue
       nodeId = CHORD.truncateHash(hashValue)
 
       #generate fingerTable
