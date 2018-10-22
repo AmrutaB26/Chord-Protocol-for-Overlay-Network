@@ -21,12 +21,6 @@ defmodule CHORD do
     {:noreply ,state}
   end
 
-  def handle_cast({:hopCount,hop},state) do
-    [_,_,h,_] = state
-    state = ["",%{},[hop + Enum.at(h,0)],""]
-    {:noreply, state}
-  end
-
   def handle_cast({:storeKey,hashKey},state) do
     [hashName,fingerTable,list,pred] = state
     state = [hashName,fingerTable, list ++ [hashKey],pred]
@@ -36,6 +30,12 @@ defmodule CHORD do
   def handle_cast({:pred,pred},state) do
     [hashName,table,list,_] = state
     state = [hashName,table,list,pred]
+    {:noreply, state}
+  end
+
+  def handle_cast({:hopCount,hop},state) do
+    [_,_,h,_] = state
+    state = ["",%{},[hop | h],""]
     {:noreply, state}
   end
 
@@ -143,7 +143,7 @@ defmodule CHORD do
   end
 
   def stringGenerator(numNodes) do
-    keyList = Enum.map(1..2*numNodes, fn x ->
+    keyList = Enum.map(1..5*numNodes, fn x ->
       value = randomString(12)
       key = :crypto.hash(:sha, value) |> Base.encode16
       spawn(fn -> getSuccessorWrapper(key) end)

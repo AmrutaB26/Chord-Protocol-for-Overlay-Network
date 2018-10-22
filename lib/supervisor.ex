@@ -3,7 +3,7 @@ defmodule CHORDSUPERVISOR do
 
   def start_link(numNodes) do
     #:ets.insert(:table, {"m", :math.log2(numNodes) |> Float.floor |> round})
-    :ets.insert(:table, {"m", 160})
+    :ets.insert(:table, {"m", 157})
     Supervisor.start_link(__MODULE__,[numNodes],name: __MODULE__)
   end
 

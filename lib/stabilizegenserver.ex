@@ -12,7 +12,6 @@ defmodule STABILIZEGENSERVER do
 
   def handle_info(:work, state) do
     JOIN.stabilize()
-    IO.puts "info"
     schedule_work() # Reschedule once more
     {:noreply, state}
   end
