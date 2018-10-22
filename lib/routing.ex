@@ -17,6 +17,7 @@ def lookup(numRequests,numNodes) do
       key = :crypto.hash(:sha, Enum.random(keyList)) |> Base.encode16
       nodeList = getNodeList()
       [n,h] = find_successor(key,Enum.at(nodeList,0),0)
+      GenServer.cast(:main,{:hopCount, h})
       IO.puts("key #{inspect key} found at node #{inspect n} with hops #{inspect h}")
       h
   end)
@@ -27,7 +28,7 @@ def lookup(numRequests,numNodes) do
 end
 
 def hopsCount do
-  [_,_,hop] = IO.inspect  GenServer.call(String.to_atom("main"),{:getState})
+  [_,_,hop] = GenServer.call(String.to_atom("main"),{:getState})
   Enum.at(hop,0)
 end
 
@@ -38,12 +39,10 @@ def find_successor(key,firstNode,hops) do
   #key between first node and successor
   [successorNode, hops] = if(key > firstNode && (firstNode > successor || (firstNode < successor && key < successor))) do
       IO.puts "key between first node and successor"
-      GenServer.cast(:main,{:hopCount, hops})
       [successor,hops+1]
   else
       # key less than start
     ans = if(key < firstNode && hops == 0) do
-      GenServer.cast(:main,{:hopCount, hops})
       IO.puts "key less than start"
       [firstNode, hops+1]
     else
