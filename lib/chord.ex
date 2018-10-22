@@ -47,7 +47,6 @@ defmodule CHORD do
   # ---------------------- Network Creation ------------------------ ##
 
   def createNetwork(numNodes) do
-    #IO.puts "Creating network"
     list = :ets.lookup(:table,"Nodes")
     finalList = Enum.sort_by(list,&elem(&1,1))
     :ets.delete(:table, "Nodes")
@@ -83,7 +82,7 @@ defmodule CHORD do
 
     Enum.map(nodeIds,
     fn x->
-      fingerTable(0, %{}, numNodes, x,nodeIds, max,157)
+      spawn(fn -> fingerTable(0, %{}, numNodes, x,nodeIds, max,157) end)
     end)
   end
 
