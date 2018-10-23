@@ -33,9 +33,8 @@ mix run main.exs 1000 2</br>
 </br>Performing lookup
 </br>Average number of hops = 10.0255</br>
 5. Working:</br>
-	1. 	Initially a network was created using totaL number of nodes. </br>
-	2.	Finger tables for the node contained the 160-bit SHA-1 hash nodeIPs and are of the size 160 each.</br>
-	3. 	Lookup was then performed for keys in the network with each node generating numRequests number of requests per second. The process exits when the desired number of requests have been performed by each node </br>
-	4. 	Stalilization and node join was performed on the network.
-6. The largest network managed for number of nodes and number of requests are as follows:</br>
-  push-sum -> 1000 for all topologies</br>
+	1. 	Initially a network is created of a small amount of totaL number of nodes. </br>
+	2.  	Remaining nodes join the network using Join and stabilization functionality of Chord protocol
+	3.	Finger tables for the node contained the 160-bit SHA-1 hash nodeIPs and are of the size 160 each.</br>
+	4. 	Lookup was then performed for keys in the network with each node generating numRequests number of requests per second. 			The process exits when the desired number of requests have been performed by each node </br>
+	5. 	The largest network managed for number of nodes and number of requests is 5000, 5</br>
