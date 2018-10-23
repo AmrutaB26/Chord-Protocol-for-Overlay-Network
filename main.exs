@@ -1,12 +1,12 @@
 defmodule MAIN do
   :ets.new(:table, [:bag, :named_table,:public])
   #:ets.new(:keys, [:named_table,:public])
-  numNodes = 2
+  numNodes = 100
   numRequests = 2
-  CHORDSUPERVISOR.start_link(numNodes)
+  CHORDSUPERVISOR.start_link(5)
   CHORD.createNetwork()
   GenServer.start_link(STABILIZEGENSERVER,[], name: :stabilize)
-  JOIN.startJoin(5)
+  JOIN.startJoin(numNodes)
   CHORD.stringGenerator(50)
   CHORD.checkStatus
   #Process.sleep(250)

@@ -1,6 +1,6 @@
 # CHORD PROTOCOL IMPLEMENTATION
 
-**Includes an algorithm for resilience towards node joins and leaves and searching for a key in a network in O(logn) time**
+**Includes an algorithm for distributed hash table protocol and lookups**
 
 ## Group info
 | Name  | UFID  |
@@ -14,8 +14,8 @@
 2. Open the command promt and enter the below mix command to compile and run the code.
 </br>**Input:** Enter numNodes, numRequests 
 </br> Here numNodes are the total number of nodes in a network and numRequests are the total number of requests which each node performs sending 1 request per second.
-</br>**Output:** Convergence value along with final s/w value for push-sum algorithm </br>
-**mix run main.exs numNodes topology algorithm** </br>
+</br>**Output:** Average number of hops per request </br>
+**mix run main.exs numNodes numRequests** </br>
 3. **Input:**
 mix run main.exs 400 torus push-sum</br>
 **Output**
@@ -29,10 +29,10 @@ mix run main.exs 400 torus gossip</br>
 </br>Convergence reached at 418ms
 4. Number of nodes vs convergence time graph is plotted in project report along with interesting observation and implementation details </br>
 5. Working:</br>
-	1. 	Convergence of Gossip algorithm for all topologies.</br>
-	2. 	Convergence of Push-Sum algorithm for all topologies.</br>
-  6. We are taking the next perfect cube for 3D and perfect square for rand 2D</br>
-  7. Random 2D gives correct results for value much greater than 1000 </br>
-  8. The largest network managed for each topology and algorithm are as follows:</br>
+	1. 	Initially a network was created using 2 nodes.</br>
+	2.	Additional nodes upto the total number of nodes were added using join and stabilize functions as stated in the paper.</br>
+	3.	Finger tables for the node contained the 160-bit SHA-1 hash nodeIPs and are of the size 160 each.</br>
+	4. 	Lookup was then performed for keys in the network with each node generating numRequests number of requests per second. The process exits when the desired number of requests have been performed by each node</br>
+6. The largest network managed for number of nodes and number of requests are as follows:</br>
   push-sum -> 1000 for all topologies</br>
   gossip -> 9000 for all topologies

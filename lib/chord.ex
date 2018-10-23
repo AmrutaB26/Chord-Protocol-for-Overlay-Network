@@ -64,10 +64,10 @@ defmodule CHORD do
     [{_,hashList}] = nodes
     Enum.map(hashList, fn x->
       {_, {nodeId,_}} = x
-      GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
-      [a,list,b,c] = GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
-      sorted_map = Enum.to_list(list) |> Enum.sort(fn({key1, _}, {key2, _}) -> key1 < key2 end)
-      IO.inspect([a,sorted_map,b,c] , limit: :infinity)
+      IO.inspect GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
+      #[_,list,_,_] = GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
+      #sorted_map = Enum.to_list(list) |> Enum.sort(fn({key1, _}, {key2, _}) -> key1 < key2 end)
+      #IO.inspect([a,sorted_map,b,c] , limit: :infinity)
     end)
   end
 
@@ -118,7 +118,6 @@ defmodule CHORD do
   end
 
   def fingerTable(i, map, nodeId, list, max,m) do
-    [{_,n}] = :ets.lookup(:table,"m")
     if(i == m) do
       value = Integer.to_string(String.to_integer(nodeId), 16)
       value = makeSize(value)
@@ -129,7 +128,7 @@ defmodule CHORD do
       end
     else
       start = String.to_integer(nodeId) + round(:math.pow(2,i))
-      index = rem(start, round(:math.pow(2,n)))
+      index = rem(start, round(:math.pow(2,160)))
       successor =
         Enum.find(list, fn x ->
           index <= String.to_integer(x)
