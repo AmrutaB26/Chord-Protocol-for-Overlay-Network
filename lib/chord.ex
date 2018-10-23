@@ -23,7 +23,7 @@ defmodule CHORD do
 
   def handle_cast({:storeKey,hashKey},state) do
     [hashName,fingerTable,list,pred] = state
-    state = [hashName,fingerTable, list ++ [hashKey],pred]
+    state = [hashName,fingerTable, list ++ hashKey,pred]
     {:noreply,state}
   end
 
@@ -39,10 +39,10 @@ defmodule CHORD do
     {:noreply, state}
   end
 
-  def handle_info({:stabilize},state) do
-    JOIN.stabilize()
-    {:noreply, state}
-  end
+  #def handle_info({:stabilize},state) do
+   # JOIN.stabilize()
+   # {:noreply, state}
+  #end
 
   def handle_call({:getState}, _from, state) do
     {:reply, state, state}
@@ -64,7 +64,7 @@ defmodule CHORD do
     [{_,hashList}] = nodes
     Enum.map(hashList, fn x->
       {_, {nodeId,_}} = x
-      IO.inspect GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
+      IO.inspect(GenServer.call(String.to_atom("h_"<>nodeId),{:getState}),limit: :infinity)
       #[_,list,_,_] = GenServer.call(String.to_atom("h_"<>nodeId),{:getState})
       #sorted_map = Enum.to_list(list) |> Enum.sort(fn({key1, _}, {key2, _}) -> key1 < key2 end)
       #IO.inspect([a,sorted_map,b,c] , limit: :infinity)
@@ -105,12 +105,12 @@ defmodule CHORD do
     [{_,m}] = :ets.lookup(:table,"m")
     Enum.map(nodeIds,
     fn x->
-      spawn(fn -> fingerTable(0, %{}, x,nodeIds, max,m) end) #------- hardcoded
+      spawn(fn -> fingerTable(0, %{}, x,nodeIds, max,m) end)
     end)
   end
 
   def makeSize(value) do
-    if(String.length(value) == 40) do
+    if(String.length(value) == 40 || String.length(value) > 40) do
       value
     else
       makeSize("0"<>value)
@@ -125,13 +125,14 @@ defmodule CHORD do
       [_,fingerTable,_,_] = GenServer.call(node,{:getState})
       if(!Map.equal?(map, fingerTable)) do
         GenServer.cast(node, {:fingerTable, map})
+        storePredecessor()
       end
     else
       start = String.to_integer(nodeId) + round(:math.pow(2,i))
       index = rem(start, round(:math.pow(2,160)))
       successor =
         Enum.find(list, fn x ->
-          index <= String.to_integer(x)
+          index < String.to_integer(x)
         end)
         finalSuccessor =
         if(successor == nil) do
@@ -141,32 +142,33 @@ defmodule CHORD do
         end
         value = Integer.to_string(finalSuccessor,16)
         |> makeSize()
-      map = Map.put(map, Integer.to_string(start,16), value)
+        s = Integer.to_string(start,16)
+        |> makeSize()
+      map = Map.put(map, s, value)
       fingerTable(i+1, map, nodeId, list, max,m)
       end
   end
 
   def randomString(length) do
-    charList = Enum.map(1..length, fn x ->
+    charList = Enum.map(1..length, fn _ ->
       Enum.random(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'])
     end)
     List.to_string(charList)
   end
 
   def stringGenerator(numNodes) do
-    keyList = Enum.map(1..5*numNodes, fn x ->
+    keyList = Enum.map(1..numNodes, fn _ ->
       value = randomString(12)
       key = :crypto.hash(:sha, value) |> Base.encode16
       spawn(fn -> getSuccessorWrapper(key) end)
       value
     end)
-    IO.puts "Keys generated"
-    :ets.insert(:table, {"Keys", keyList}) # if new table needed?????
+    :ets.insert(:table, {"Keys", keyList})
   end
 
   def getSuccessorWrapper(key) do
     node = getSuccessorNode(key)
-    GenServer.cast(String.to_atom("h_" <> node), {:storeKey, key})
+    GenServer.cast(String.to_atom("h_" <> node), {:storeKey, [key]})
   end
 
   def getSuccessorNode(key) do
@@ -178,7 +180,7 @@ defmodule CHORD do
       end)
     successor =
       Enum.find(nodeIds, fn x ->
-      key <= x
+      key < x
       end)
     if(successor == nil) do
       Enum.at(nodeIds,0)

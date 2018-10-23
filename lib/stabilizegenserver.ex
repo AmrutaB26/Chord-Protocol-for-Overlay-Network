@@ -17,6 +17,6 @@ defmodule STABILIZEGENSERVER do
   end
 
   defp schedule_work() do
-    Process.send_after(self(), :work, 1)
+    Process.send_after(self(), :work, 3000)
   end
 end

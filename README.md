@@ -17,22 +17,25 @@
 </br>**Output:** Average number of hops per request </br>
 **mix run main.exs numNodes numRequests** </br>
 3. **Input:**
-mix run main.exs 400 torus push-sum</br>
+mix run main.exs 100 5</br>
 **Output**
-</br>Convergence reached at 10063ms
-</br>Nodes converged: 340
-</br>Total nodes: 400
-</br>Convergence ratio S/W 200.26505554316893 </br></br>
+</br>Created 100 nodes network
+</br>Performing join and stabilizing network
+</br>Keys generated
+</br>Performing lookup
+</br>Average number of hops = 7.380952380952381</br></br>
 **Input:**
-mix run main.exs 400 torus gossip</br>
+mix run main.exs 1000 2</br>
 **Output**
-</br>Convergence reached at 418ms
-4. Number of nodes vs convergence time graph is plotted in project report along with interesting observation and implementation details </br>
+</br>Created 1000 nodes network
+</br>Performing join and stabilizing network
+</br>Keys generated
+</br>Performing lookup
+</br>Average number of hops = 10.0255</br>
 5. Working:</br>
-	1. 	Initially a network was created using 2 nodes.</br>
-	2.	Additional nodes upto the total number of nodes were added using join and stabilize functions as stated in the paper.</br>
-	3.	Finger tables for the node contained the 160-bit SHA-1 hash nodeIPs and are of the size 160 each.</br>
-	4. 	Lookup was then performed for keys in the network with each node generating numRequests number of requests per second. The process exits when the desired number of requests have been performed by each node</br>
+	1. 	Initially a network was created using totaL number of nodes. </br>
+	2.	Finger tables for the node contained the 160-bit SHA-1 hash nodeIPs and are of the size 160 each.</br>
+	3. 	Lookup was then performed for keys in the network with each node generating numRequests number of requests per second. The process exits when the desired number of requests have been performed by each node </br>
+	4. 	Stalilization and node join was performed on the network.
 6. The largest network managed for number of nodes and number of requests are as follows:</br>
   push-sum -> 1000 for all topologies</br>
-  gossip -> 9000 for all topologies
